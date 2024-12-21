@@ -57,9 +57,9 @@
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
 
                     // Получаем signer
-                    signer = provider.getSigner();
+                    const signer = provider.getSigner();
 
-                    // Получаем адрес с помощью .getAddress(), но через правильный провайдер
+                    // Получаем адрес через signer
                     const address = await signer.getAddress(); 
                     console.log("Адрес подключенного кошелька:", address);
 
@@ -91,7 +91,7 @@
             }
 
             try {
-                const recipient = await signer.getAddress(); // Адрес корректно получаем через getAddress
+                const recipient = await signer.getAddress(); // Адрес корректно получаем через signer
                 const tx = await contract.createNFT(recipient);
                 console.log("Транзакция отправлена:", tx);
                 await tx.wait();
