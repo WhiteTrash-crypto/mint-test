@@ -33,7 +33,19 @@
 
         // Данные вашего контракта
         const contractAddress = "0xe9730ef652cce749162d6b0fd6d72f9a9b367410"; // Укажите адрес контракта
-        const contractABI = [\n            {\n                \"inputs\": [\n                    { \"internalType\": \"address\", \"name\": \"recipient\", \"type\": \"address\" }\n                ],\n                \"name\": \"createNFT\",\n                \"outputs\": [\n                    { \"internalType\": \"uint256\", \"name\": \"\", \"type\": \"uint256\" }\n                ],\n                \"stateMutability\": \"nonpayable\",\n                \"type\": \"function\"\n            }\n        ]; // ABI вашего контракта
+        const contractABI = [
+            {
+                "inputs": [
+                    { "internalType": "address", "name": "recipient", "type": "address" }
+                ],
+                "name": "createNFT",
+                "outputs": [
+                    { "internalType": "uint256", "name": "", "type": "uint256" }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ]; // ABI вашего контракта
 
         document.getElementById("connectWalletButton").addEventListener("click", async () => {
             if (typeof window.ethereum !== "undefined") {
@@ -41,11 +53,11 @@
                     console.log("MetaMask обнаружен. Подключаем...");
 
                     // Подключение к провайдеру
-                    const provider = new ethers.BrowserProvider(window.ethereum);
-                    await provider.send("eth_requestAccounts", []);
+                    const provider = new ethers.JsonRpcProvider(arbitrumRPC); // Изменено на JsonRpcProvider
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
 
                     // Получаем signer
-                    signer = await provider.getSigner();
+                    signer = provider.getSigner();
                     console.log("Signer подключен. Адрес:", await signer.getAddress());
 
                     // Проверяем текущую сеть
