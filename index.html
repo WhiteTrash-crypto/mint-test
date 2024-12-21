@@ -53,14 +53,14 @@
                     console.log("MetaMask обнаружен. Подключаем...");
 
                     // Подключение к провайдеру
-                    const provider = new ethers.BrowserProvider(window.ethereum); // Используем правильный провайдер
+                    const provider = new ethers.BrowserProvider(window.ethereum);
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
 
                     // Получаем signer
-                    const signer = provider.getSigner();
+                    signer = await provider.getSigner();
 
-                    // Получаем адрес через signer
-                    const address = await signer.getAddress(); 
+                    // Получаем адрес через signer.address (вместо getAddress())
+                    const address = signer.address;
                     console.log("Адрес подключенного кошелька:", address);
 
                     // Проверяем текущую сеть
@@ -91,7 +91,7 @@
             }
 
             try {
-                const recipient = await signer.getAddress(); // Адрес корректно получаем через signer
+                const recipient = signer.address; // Теперь используем signer.address
                 const tx = await contract.createNFT(recipient);
                 console.log("Транзакция отправлена:", tx);
                 await tx.wait();
