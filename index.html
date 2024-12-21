@@ -25,7 +25,7 @@
     <button id="mintButton" disabled>Mint NFT</button>
 
     <script>
-        const arbitrumChainId = "0xa4b1"; // Chain ID для сети Arbitrum (в 16-ричном формате)
+        const arbitrumChainId = 42161; // Chain ID для сети Arbitrum
         const arbitrumRPC = "https://arb1.arbitrum.io/rpc"; // RPC URL для Arbitrum
 
         let signer;
@@ -33,80 +33,42 @@
 
         // Данные вашего контракта
         const contractAddress = "0xe9730ef652cce749162d6b0fd6d72f9a9b367410"; // Укажите адрес контракта
-        const contractABI = [
-            {
-                "inputs": [
-                    { "internalType": "address", "name": "recipient", "type": "address" }
-                ],
-                "name": "createNFT",
-                "outputs": [
-                    { "internalType": "uint256", "name": "", "type": "uint256" }
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }
-        ]; // ABI вашего контракта
+        const contractABI = [\n            {\n                \"inputs\": [\n                    { \"internalType\": \"address\", \"name\": \"recipient\", \"type\": \"address\" }\n                ],\n                \"name\": \"createNFT\",\n                \"outputs\": [\n                    { \"internalType\": \"uint256\", \"name\": \"\", \"type\": \"uint256\" }\n                ],\n                \"stateMutability\": \"nonpayable\",\n                \"type\": \"function\"\n            }\n        ]; // ABI вашего контракта
 
-        // Кнопка Connect Wallet
         document.getElementById("connectWalletButton").addEventListener("click", async () => {
             if (typeof window.ethereum !== "undefined") {
                 try {
-                    // Запрашиваем доступ к аккаунтам
-                    await ethereum.request({ method: "eth_requestAccounts" });
+                    console.log("MetaMask обнаружен. Подключаем...");
 
-                    const provider = new ethers.providers.Web3Provider(window.ethereum);
-                    signer = provider.getSigner();
+                    // Подключение к провайдеру
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    await provider.send("eth_requestAccounts", []);
+
+                    // Получаем signer
+                    signer = await provider.getSigner();
+                    console.log("Signer подключен. Адрес:", await signer.getAddress());
 
                     // Проверяем текущую сеть
-                    const { chainId } = await provider.getNetwork();
-                    if (chainId !== parseInt(arbitrumChainId, 16)) {
-                        // Если сеть неверная, предлагаем переключить
-                        try {
-                            await ethereum.request({
-                                method: "wallet_switchEthereumChain",
-                                params: [{ chainId: arbitrumChainId }],
-                            });
-                        } catch (switchError) {
-                            // Если сеть не добавлена, предлагаем добавить
-                            if (switchError.code === 4902) {
-                                await ethereum.request({
-                                    method: "wallet_addEthereumChain",
-                                    params: [
-                                        {
-                                            chainId: arbitrumChainId,
-                                            chainName: "Arbitrum One",
-                                            rpcUrls: [arbitrumRPC],
-                                            nativeCurrency: {
-                                                name: "Ether",
-                                                symbol: "ETH",
-                                                decimals: 18,
-                                            },
-                                            blockExplorerUrls: ["https://arbiscan.io/"],
-                                        },
-                                    ],
-                                });
-                            } else {
-                                throw switchError;
-                            }
-                        }
+                    const network = await provider.getNetwork();
+                    if (network.chainId !== arbitrumChainId) {
+                        alert("Вы не в сети Arbitrum. Пожалуйста, переключитесь.");
+                        return;
                     }
 
-                    alert("Wallet connected and Arbitrum network selected!");
                     // Подключаем контракт
                     contract = new ethers.Contract(contractAddress, contractABI, signer);
 
-                    // Активируем кнопку Mint NFT
+                    alert("Кошелек подключен!");
                     document.getElementById("mintButton").disabled = false;
                 } catch (error) {
                     console.error("Ошибка подключения:", error);
-                    alert("Произошла ошибка при подключении: " + error.message);
+                    alert("Произошла ошибка: " + error.message);
                 }
             } else {
                 alert("Установите MetaMask!");
             }
         });
 
-        // Кнопка Mint NFT
         document.getElementById("mintButton").addEventListener("click", async () => {
             if (!contract || !signer) {
                 alert("Сначала подключите кошелек!");
@@ -114,17 +76,11 @@
             }
 
             try {
-                // Получаем адрес текущего пользователя
                 const recipient = await signer.getAddress();
-
-                // Вызываем функцию createNFT
                 const tx = await contract.createNFT(recipient);
                 console.log("Транзакция отправлена:", tx);
-
-                // Ожидание подтверждения
                 await tx.wait();
                 alert("NFT успешно заминтован!");
-
             } catch (error) {
                 console.error("Ошибка при минтинге:", error);
                 alert("Произошла ошибка: " + error.message);
