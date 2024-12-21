@@ -58,7 +58,11 @@
 
                     // Получаем signer
                     signer = provider.getSigner();
-                    console.log("Signer подключен. Адрес:", await signer.getAddress());
+                    console.log("Signer подключен.");
+
+                    // Получаем адрес с помощью .address
+                    const address = await signer.getAddress();
+                    console.log("Адрес подключенного кошелька:", address);
 
                     // Проверяем текущую сеть
                     const network = await provider.getNetwork();
@@ -88,7 +92,7 @@
             }
 
             try {
-                const recipient = await signer.getAddress();
+                const recipient = await signer.getAddress(); // Теперь используется корректно
                 const tx = await contract.createNFT(recipient);
                 console.log("Транзакция отправлена:", tx);
                 await tx.wait();
