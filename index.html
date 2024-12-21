@@ -53,15 +53,14 @@
                     console.log("MetaMask обнаружен. Подключаем...");
 
                     // Подключение к провайдеру
-                    const provider = new ethers.JsonRpcProvider(arbitrumRPC); // Изменено на JsonRpcProvider
+                    const provider = new ethers.BrowserProvider(window.ethereum); // Используем правильный провайдер
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
 
                     // Получаем signer
                     signer = provider.getSigner();
-                    console.log("Signer подключен.");
 
-                    // Получаем адрес с помощью .address
-                    const address = await signer.getAddress();
+                    // Получаем адрес с помощью .getAddress(), но через правильный провайдер
+                    const address = await signer.getAddress(); 
                     console.log("Адрес подключенного кошелька:", address);
 
                     // Проверяем текущую сеть
@@ -92,7 +91,7 @@
             }
 
             try {
-                const recipient = await signer.getAddress(); // Теперь используется корректно
+                const recipient = await signer.getAddress(); // Адрес корректно получаем через getAddress
                 const tx = await contract.createNFT(recipient);
                 console.log("Транзакция отправлена:", tx);
                 await tx.wait();
