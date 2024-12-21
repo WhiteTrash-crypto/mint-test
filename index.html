@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mint NFT on Arbitrum</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mint Your NFT on Arbitrum</h1>
+    <button id="connectWalletButton">Connect Wallet</button>
+    <button id="mintButton" disabled>Mint NFT</button>
+
+    <script>
+        const arbitrumChainId = "0xa4b1"; // Chain ID для сети Arbitrum (в 16-ричном формате)
+        const arbitrumRPC = "https://arb1.arbitrum.io/rpc"; // RPC URL для Arbitrum
+
+        let signer;
+        let contract;
+
+        // Данные вашего контракта
+        const contractAddress = "ВАШ_АДРЕС_КОНТРАКТА"; // Укажите адрес контракта
+        const contractABI = [
+            {
+                "inputs": [
+                    { "internalType": "address", "name": "recipient", "type": "address" }
+                ],
+                "name": "createNFT",
+                "outputs": [
+                    { "internalType": "uint256", "name": "", "type": "uint256" }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ]; // ABI вашего контракта
+
+        // Кнопка Connect Wallet
+        document.getElementById("connectWalletButton").addEventListener("click", async () => {
+            if (typeof window.ethereum !== "undefined") {
+                try {
+                    // Запрашиваем доступ к аккаунтам
+                    await ethereum.request({ method: "eth_requestAccounts" });
+
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+
+                    // Проверяем текущую сеть
+                    const { chainId } = await provider.getNetwork();
+                    if (chainId !== parseInt(arbitrumChainId, 16)) {
+                        // Если сеть неверная, предлагаем переключить
+                        try {
+                            await ethereum.request({
+                                method: "wallet_switchEthereumChain",
+                                params: [{ chainId: arbitrumChainId }],
+                            });
+                        } catch (switchError) {
+                            // Если сеть не добавлена, предлагаем добавить
+                            if (switchError.code === 4902) {
+                                await ethereum.request({
+                                    method: "wallet_addEthereumChain",
+                                    params: [
+                                        {
+                                            chainId: arbitrumChainId,
+                                            chainName: "Arbitrum One",
+                                            rpcUrls: [arbitrumRPC],
+                                            nativeCurrency: {
+                                                name: "Ether",
+                                                symbol: "ETH",
+                                                decimals: 18,
+                                            },
+                                            blockExplorerUrls: ["https://arbiscan.io/"],
+                                        },
+                                    ],
+                                });
+                            } else {
+                                throw switchError;
+                            }
+                        }
+                    }
+
+                    alert("Wallet connected and Arbitrum network selected!");
+                    // Подключаем контракт
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+                    // Активируем кнопку Mint NFT
+                    document.getElementById("mintButton").disabled = false;
+                } catch (error) {
+                    console.error("Ошибка подключения:", error);
+                    alert("Произошла ошибка при подключении: " + error.message);
+                }
+            } else {
+                alert("Установите MetaMask!");
+            }
+        });
+
+        // Кнопка Mint NFT
+        document.getElementById("mintButton").addEventListener("click", async () => {
+            if (!contract || !signer) {
+                alert("Сначала подключите кошелек!");
+                return;
+            }
+
+            try {
+                // Получаем адрес текущего пользователя
+                const recipient = await signer.getAddress();
+
+                // Вызываем функцию createNFT
+                const tx = await contract.createNFT(recipient);
+                console.log("Транзакция отправлена:", tx);
+
+                // Ожидание подтверждения
+                await tx.wait();
+                alert("NFT успешно заминтован!");
+
+            } catch (error) {
+                console.error("Ошибка при минтинге:", error);
+                alert("Произошла ошибка: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
