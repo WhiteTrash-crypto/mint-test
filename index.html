@@ -63,9 +63,11 @@
                     const address = signer.address;
                     console.log("Адрес подключенного кошелька:", address);
 
-                    // Проверяем текущую сеть
-                    const network = await provider.getNetwork();
-                    if (network.chainId !== arbitrumChainId) {
+                    // Получаем текущую сеть через window.ethereum.request
+                    const network = await window.ethereum.request({ method: 'eth_chainId' });
+
+                    // Проверяем, что мы на сети Arbitrum
+                    if (parseInt(network, 16) !== arbitrumChainId) {
                         alert("Вы не в сети Arbitrum. Пожалуйста, переключитесь.");
                         return;
                     }
